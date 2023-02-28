@@ -1,0 +1,144 @@
+﻿<UserControl x:Class="DBPost.Views.PostmensView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DBPost.Views"
+             xmlns:Icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../themes/DataGrid.xaml"/>
+                <ResourceDictionary Source="../themes/AddButton.xaml"/>
+                <ResourceDictionary Source="../themes/SearchTextBox.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.25*"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Grid.Column="0"
+                       Text="Почтальоны"
+                       FontFamily="Roboto"
+                       FontSize="30"
+                       Foreground="#717588"
+                       Margin="0 -40"
+                       Width="200"
+                       Height="30"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Left"/>
+            <Button Style="{DynamicResource ButtonStyle1}"
+                    Grid.Column="1"
+                    Width="200"
+                    Height="50"
+                    Margin="0 20 0 0"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Content="+ добавить почтальона"
+                    Click="Button_Click"
+                    x:Name="addButton"/>
+            <Grid Grid.Column="0"
+                       HorizontalAlignment="Left">
+                <TextBox x:Name="SearchTextBox"
+                         Style="{DynamicResource TextBoxStyle1}"
+                         Width="255"
+                         Height="40"
+                         TextChanged="SearchTextBox_TextChanged"/>
+                <TextBlock x:Name="SearchTextBlock"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center"
+                           Text="Поиск"
+                           FontSize="15"
+                           Margin="35 0 0 0"
+                           Foreground="#717588"/>
+                <Icon:PackIconMaterial Kind="Magnify"
+                                       Foreground="#717588"
+                                       Width="15"
+                                       Height="15"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       Margin="15 0 0 0"
+                                       x:Name="SearchIcon"/>
+            </Grid>
+
+
+        </Grid>
+        
+        <DataGrid Style="{DynamicResource DataGridStyle1}"
+                  CellStyle="{DynamicResource DataGridCellStyle1}"
+                  ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}"
+                  RowStyle="{DynamicResource DataGridRowStyle1}"
+                  x:Name="PostmensDataGrid"
+                  AutoGenerateColumns="False"
+                  Grid.Row="1">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#"
+                                    IsReadOnly="True"
+                                    CanUserResize="False"
+                                    Width="auto"
+                                    Binding="{Binding IDPostmen}"/>
+                <DataGridTemplateColumn Header="ФИО"
+                                        Width="190"
+                                        IsReadOnly="True"
+                                        CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding FIO}"
+                                       TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Адрес"
+                                        Width="250"
+                                        IsReadOnly="True"
+                                        CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Address}"
+                                       TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Номер телефона"
+                                    IsReadOnly="True"
+                                    CanUserResize="False"
+                                    Width="auto"
+                                    Binding="{Binding PhoneNumber}"/>
+                <DataGridTemplateColumn IsReadOnly="True"
+                                        Width="auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource GridEditButton}"
+                                        Click="EditButton_Click"
+                                        Tag="{Binding}">
+                                    <Icon:PackIconMaterial Kind="PencilOutline"
+                                                           Style="{StaticResource gridButtonIcon}"/>
+                                </Button>
+                                <Button Style="{StaticResource GridRemoveButton}"
+                                        Margin="5, 0, 0, 0"
+                                        Click="DeleteButton_Click"
+                                        Tag="{Binding}">
+                                    <Icon:PackIconMaterial Kind="Delete"
+                                                           Style="{StaticResource gridButtonIcon}"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
