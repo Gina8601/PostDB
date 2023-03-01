@@ -1,14 +1,18 @@
 ﻿using DBPost.Views;
+using DBPost.Windows;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -64,6 +68,7 @@ namespace DBPost.AddEditWindow
             this.SubscriptionEnd.Text = DateTime.Parse(dataRowView.Row["SubscriptionEnd"].ToString()!).ToShortDateString();
             this.IssueDate.Text = DateTime.Parse(dataRowView.Row["IssueDate"].ToString()!).ToShortDateString();
             this.SubscriptionTerm.Text = dataRowView.Row["SubscriptionTerm"].ToString();
+            this.Price.Text = dataRowView.Row["Price"].ToString();
             using (SqlConnection con = new SqlConnection(ConString))
             {
                 con.Open();
@@ -108,13 +113,13 @@ namespace DBPost.AddEditWindow
                         SqlCommand cmd;
                         if (isAdding)
                         {
-                            cmd = new ($"INSERT INTO Subscriptions (FKSubscriber, FKPeriodical, SubscriptionStart, SubscriptionEnd, IssueDate, SubscriptionTerm ) Values" +
-                            $" ({idSub}, {idPer}, '{SubscriptionStart.Text}', '{SubscriptionEnd.Text}', '{IssueDate.Text}', {SubscriptionTerm.Text})", con);
+                            cmd = new ($"INSERT INTO Subscriptions (FKSubscriber, FKPeriodical, SubscriptionStart, SubscriptionEnd, IssueDate, SubscriptionTerm, Price) Values" +
+                            $" ({idSub}, {idPer}, '{SubscriptionStart.Text}', '{SubscriptionEnd.Text}', '{IssueDate.Text}', {SubscriptionTerm.Text}, {Price.Text.Replace(',', '.')})", con);
                         }
                         else
                         {
                             cmd = new($"Update Subscriptions Set FKSubscriber={idSub}, FKPeriodical={idPer}, SubscriptionStart='{this.SubscriptionStart.Text}'" +
-                                $", SubscriptionEnd='{this.SubscriptionEnd.Text}', IssueDate='{this.IssueDate.Text}', SubscriptionTerm={this.SubscriptionTerm.Text} where IDSubscription={idSubscription}", con);
+                                $", SubscriptionEnd='{this.SubscriptionEnd.Text}', IssueDate='{this.IssueDate.Text}', SubscriptionTerm={this.SubscriptionTerm.Text}, Price={Price.Text.Replace(',','.')} where IDSubscription={idSubscription}", con);
                         }
                         cmd.ExecuteNonQuery();
                         con.Close();
@@ -133,6 +138,105 @@ namespace DBPost.AddEditWindow
                 this.IsEnabled = true;
             };
             (FindResource("OpenMenu") as Storyboard)!.Begin();
+        }
+        private void Date_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, @"[^0-9-]+"))
+            {
+                e.Handled = true;
+            }
+        }
+        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^0-9.]+")) e.Handled = true;
+        }
+
+        private bool ValidateSubscription()
+        {
+            if (FKSubscriber.SelectedIndex < 0)
+            {
+                MessageWindow.Show("Ошибка ввода", "Выберите подписчика!", MessageBoxButton.OK);
+                return false;
+            }
+            if (FKPeriodical.SelectedIndex < 0)
+            {
+                MessageWindow.Show("Ошибка ввода", "Выберите издание!!", MessageBoxButton.OK);
+                return false;
+            }
+
+            DateTime issueDate = new();
+            DateTime startDate = new();
+            if (!DateTime.TryParse(SubscriptionStart.Text, out startDate))
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите корректно начало подписки!", MessageBoxButton.OK);
+                return false;
+            }
+            if (!DateTime.TryParse(SubscriptionEnd.Text, out issueDate))
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите корректно конец подписки!", MessageBoxButton.OK);
+                return false;
+            }
+            if (!DateTime.TryParse(IssueDate.Text, out issueDate))
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите корректно дату оформления!", MessageBoxButton.OK);
+                return false;
+            }
+            if (SubscriptionTerm.SelectedIndex < 0)
+            {
+                MessageWindow.Show("Ошибка ввода", "Выберите срок подписки!", MessageBoxButton.OK);
+                return false;
+            }
+            if(issueDate.AddDays(10) < startDate)   
+            {
+                MessageWindow.Show("Ошибка ввода", "Дата оформления подписки должна быть не позднее 10 дней до ее начала!", MessageBoxButton.OK);
+                return false;
+            }
+            return true;
+        }
+
+        private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ValidateSubscription()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+        }
+
+        private void SubscriptionTerm_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SubscriptionTerm.SelectedIndex >= 0)
+            {
+                DateTime start = new();
+                if(DateTime.TryParse(SubscriptionStart.Text, out start))
+                {
+                   SubscriptionEnd.Text = start.AddMonths(int.Parse((SubscriptionTerm.SelectedItem as ComboBoxItem)!.Content.ToString()!)).ToShortDateString();
+                }
+                if (FKPeriodical.SelectedIndex >= 0)
+                {
+                    string term = string.Empty;
+                    switch (int.Parse((SubscriptionTerm.SelectedItem as ComboBoxItem)!.Content.ToString()!))
+                    {
+                        case 1:
+                            term = "PriceMonth";
+                            break;
+                        case 3:
+                            term = "PriceThreeMonths";
+                            break;
+                        case 6:
+                            term = "PriceSixMonths";
+                            break;
+                        case 12:
+                            term = "PriceTwelveMonths";
+                            break;
+                        default:
+                            break;
+                    }
+                    using (SqlConnection con = new SqlConnection(ConString))
+                    {
+                        con.Open();
+                        SqlCommand findPricePeriodical = new($"Select {term} from Periodicals where Title='{FKPeriodical.Text}'", con);
+                        Price.Text = findPricePeriodical.ExecuteScalar().ToString()!;
+                        con.Close();
+                    }
+                }
+            }
         }
     }
 }

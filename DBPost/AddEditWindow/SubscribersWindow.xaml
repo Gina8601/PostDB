@@ -128,7 +128,8 @@
                        Height="30"
                        Width="230"
                        Margin="20 20 20 0"
-                       x:Name="PhoneNumber"/>
+                       x:Name="PhoneNumber"
+                     PreviewTextInput="Phone_PreviewTextInput"/>
             <TextBlock Grid.Row="5"
                        Text="Код почтальона:"
                        FontSize="15"
@@ -161,7 +162,8 @@
                     HorizontalAlignment="Right"
                     Content="добавить"
                     x:Name="AddButton"
-                    Click="Button_Click"/>
+                    Click="Button_Click"
+                    PreviewMouseLeftButtonDown="AddButton_PreviewMouseLeftButtonDown"/>
         </Grid>
     </Border>
 </UserControl>

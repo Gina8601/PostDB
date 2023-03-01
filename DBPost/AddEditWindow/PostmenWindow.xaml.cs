@@ -17,6 +17,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Configuration;
+using System.Text.RegularExpressions;
+using DBPost.Windows;
+using System.Windows.Controls.Primitives;
 
 namespace DBPost.AddEditWindow
 {
@@ -47,6 +50,8 @@ namespace DBPost.AddEditWindow
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (sender as Button == AddButton && !ValidatePostMen()) return;
+
             this.IsEnabled = false;
             (FindResource("CloseMenu") as Storyboard)!.Completed += (s, a) => {
                 (this.Parent as Grid)!.Children.Remove(this);
@@ -83,6 +88,41 @@ namespace DBPost.AddEditWindow
                 this.IsEnabled = true;
             };
             (FindResource("OpenMenu") as Storyboard)!.Begin();
+        }
+
+        private void Text_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^a-zA-Z]+")) e.Handled = true;
+        }
+
+        private void Phone_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, @"[^0-9+\-()]+")) e.Handled = true;
+        }
+
+        private bool ValidatePostMen()
+        {
+            if (FIO.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите имя!", MessageBoxButton.OK);
+                return false;
+            }
+            if (Address.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите адрес!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PhoneNumber.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите номер телефона!", MessageBoxButton.OK);
+                return false;
+            }
+            return true;
+        }
+
+        private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ValidatePostMen()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
     }
 }
