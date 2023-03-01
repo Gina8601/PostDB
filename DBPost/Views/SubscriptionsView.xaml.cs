@@ -278,5 +278,9 @@ namespace DBPost.Views
                 }
             }
         }
+        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^0-9]+")) e.Handled = true;
+        }
     }
 }
