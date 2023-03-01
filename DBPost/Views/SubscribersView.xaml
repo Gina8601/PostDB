@@ -53,6 +53,7 @@
                 <TextBox x:Name="SearchTextBox"
                          Style="{DynamicResource TextBoxStyle1}"
                          Width="255"
+                         Padding="16 5 0 0"
                          Height="40"
                          TextChanged="SearchTextBox_TextChanged"/>
                 <TextBlock x:Name="SearchTextBlock"
