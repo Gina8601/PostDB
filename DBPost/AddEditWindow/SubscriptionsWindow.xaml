@@ -57,7 +57,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
-                <RowDefinition Height="70"/>
+                <RowDefinition Height="67"/>
                 <RowDefinition Height="67"/>
                 <RowDefinition Height="67"/>
                 <RowDefinition Height="67"/>
@@ -66,7 +66,7 @@
                 <RowDefinition Height="67"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="1"
+            <TextBlock Grid.Row="0"
                        Grid.Column="0"
                        Grid.ColumnSpan="2"
                        Text="Добавить"
@@ -80,13 +80,26 @@
                        x:Name="TitleTextBlock"/>
             <Rectangle Height="2"
                        Width="280"
-                       Grid.Row="1"
+                       Grid.Row="0"
                        Grid.Column="0"
                        Grid.ColumnSpan="2"
                        Fill="#717588"
                        Margin="20 45 20 0"/>
-            <TextBlock Grid.Row="2"
+            <TextBlock Grid.Row="1"
                        Text="Код подписчика:"
+                       FontSize="15"
+                       FontFamily="Roboto"
+                       Foreground="#717588"
+                       HorizontalAlignment="Left"
+                       TextAlignment="Center"
+                       Margin="25 10 0 0"/>
+            <ComboBox Style="{DynamicResource ComboBoxStyle}" Grid.Row="1"
+                      Height="30"
+                      Width="230"
+                      Margin="20 20 20 0"
+                      x:Name="FKSubscriber"/>
+            <TextBlock Grid.Row="2"
+                       Text="Код издания:"
                        FontSize="15"
                        FontFamily="Roboto"
                        Foreground="#717588"
@@ -97,22 +110,25 @@
                       Height="30"
                       Width="230"
                       Margin="20 20 20 0"
-                      x:Name="FKSubscriber"/>
+                      x:Name="FKPeriodical"/>
             <TextBlock Grid.Row="3"
-                       Text="Код издания:"
+                       Text="Начало подписки:"
                        FontSize="15"
                        FontFamily="Roboto"
                        Foreground="#717588"
                        HorizontalAlignment="Left"
                        TextAlignment="Center"
                        Margin="25 10 0 0"/>
-            <ComboBox Style="{DynamicResource ComboBoxStyle}" Grid.Row="3"
-                      Height="30"
-                      Width="230"
-                      Margin="20 20 20 0"
-                      x:Name="FKPeriodical"/>
+            <TextBox Style="{DynamicResource InputTextBox}"
+                       Grid.Row="3"
+                       Background="White"
+                       Height="30"
+                       Width="230"
+                       Margin="20 25 20 0" 
+                       x:Name="SubscriptionStart"
+                       PreviewTextInput="Date_PreviewTextInput"/>
             <TextBlock Grid.Row="4"
-                       Text="Начало подписки:"
+                       Text="Конец подписки:"
                        FontSize="15"
                        FontFamily="Roboto"
                        Foreground="#717588"
@@ -124,10 +140,11 @@
                        Background="White"
                        Height="30"
                        Width="230"
-                       Margin="20 25 20 0" 
-                       x:Name="SubscriptionStart"/>
+                       Margin="20 25 20 0"
+                       x:Name="SubscriptionEnd"
+                       PreviewTextInput="Date_PreviewTextInput"/>
             <TextBlock Grid.Row="5"
-                       Text="Конец подписки:"
+                       Text="Дата оформления:"
                        FontSize="15"
                        FontFamily="Roboto"
                        Foreground="#717588"
@@ -140,23 +157,9 @@
                        Height="30"
                        Width="230"
                        Margin="20 25 20 0"
-                       x:Name="SubscriptionEnd"/>
+                       x:Name="IssueDate"
+                       PreviewTextInput="Date_PreviewTextInput"/>
             <TextBlock Grid.Row="6"
-                       Text="Дата оформления:"
-                       FontSize="15"
-                       FontFamily="Roboto"
-                       Foreground="#717588"
-                       HorizontalAlignment="Left"
-                       TextAlignment="Center"
-                       Margin="25 10 0 0"/>
-            <TextBox Style="{DynamicResource InputTextBox}"
-                       Grid.Row="6"
-                       Background="White"
-                       Height="30"
-                       Width="230"
-                       Margin="20 25 20 0"
-                       x:Name="IssueDate"/>
-            <TextBlock Grid.Row="7"
                        Text="Срок подписки:"
                        FontSize="15"
                        FontFamily="Roboto"
@@ -164,16 +167,33 @@
                        HorizontalAlignment="Left"
                        TextAlignment="Center"
                        Margin="25 10 0 0"/>
-            <ComboBox Style="{DynamicResource ComboBoxStyle}" Grid.Row="7"
+            <ComboBox Style="{DynamicResource ComboBoxStyle}" Grid.Row="6"
                       Height="30"
                       Width="230"
                       Margin="20 20 20 0"
-                      x:Name="SubscriptionTerm">
+                      x:Name="SubscriptionTerm"
+                      SelectionChanged="SubscriptionTerm_SelectionChanged">
                 <ComboBoxItem Content="1"/>
                 <ComboBoxItem Content="3"/>
                 <ComboBoxItem Content="6"/>
                 <ComboBoxItem Content="12"/>
             </ComboBox>
+            <TextBlock Grid.Row="7"
+                       Text="Цена подписки:"
+                       FontSize="15"
+                       FontFamily="Roboto"
+                       Foreground="#717588"
+                       HorizontalAlignment="Left"
+                       TextAlignment="Center"
+                       Margin="25 10 0 0"/>
+            <TextBox Style="{DynamicResource InputTextBox}"
+                       Grid.Row="7"
+                       Background="White"
+                       Height="30"
+                       Width="230"
+                       Margin="20 25 20 0"
+                       x:Name="Price"
+                       PreviewTextInput="Digit_PreviewTextInput"/>
             <Button Style="{DynamicResource ButtonStyle2}"
                     Grid.Row="8"
                     Width="120"
@@ -193,7 +213,8 @@
                     HorizontalAlignment="Right"
                     Content="добавить"
                     x:Name="AddButton"
-                    Click="Button_Click"/>
+                    Click="Button_Click"
+                    PreviewMouseLeftButtonDown="AddButton_PreviewMouseLeftButtonDown"/>
         </Grid>
     </Border>
 </UserControl>

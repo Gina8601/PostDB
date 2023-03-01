@@ -1,4 +1,5 @@
 ﻿using DBPost.Views;
+using DBPost.Windows;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -6,9 +7,11 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -112,6 +115,7 @@ namespace DBPost.AddEditWindow
                     SubscribersView.FillDataGrid();
                 }
             };
+
         }
 
         private void UserControl_LayoutUpdated(object sender, EventArgs e)
@@ -123,6 +127,46 @@ namespace DBPost.AddEditWindow
                 this.IsEnabled = true;
             };
             (FindResource("OpenMenu") as Storyboard)!.Begin();
+        }
+
+        private void Text_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^a-zA-Z]+")) e.Handled = true;
+        }
+
+        private void Phone_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, @"[^0-9+\-()]+")) e.Handled = true;
+        }
+
+        private bool ValidateSubscriber()
+        {
+            if(FIO.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите имя!", MessageBoxButton.OK);
+                return false;
+            }
+            if (Address.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите адрес!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PhoneNumber.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите номер телефона!", MessageBoxButton.OK);
+                return false;
+            }
+            if (FKPostmen.SelectedIndex < 0)
+            {
+                MessageWindow.Show("Ошибка ввода", "Выберите почтальона!", MessageBoxButton.OK);
+                return false;
+            }
+            return true;
+        }
+
+        private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        { 
+            if (ValidateSubscriber()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
     }
 }
