@@ -1,4 +1,5 @@
 ﻿using DBPost.Views;
+using DBPost.Windows;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -6,9 +7,11 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -85,6 +88,46 @@ namespace DBPost.AddEditWindow
                 this.IsEnabled = true;
             };
             (FindResource("OpenMenu") as Storyboard)!.Begin();
+        }
+
+        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^0-9.]+")) e.Handled = true;
+        }
+
+        private bool ValidatePeriodical()
+        {
+            if (Title.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите название издания!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PriceMonth.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите цену за месяц!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PriceThreeMonths.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите цену за 3 месяца!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PriceSixMonths.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите цену за 6 месяцев!", MessageBoxButton.OK);
+                return false;
+            }
+            if (PriceTwelveMonths.Text.Length < 1)
+            {
+                MessageWindow.Show("Ошибка ввода", "Введите цену за 12 месяцев!", MessageBoxButton.OK);
+                return false;
+            }
+            return true;
+        }
+
+        private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ValidatePeriodical()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
     }
 }

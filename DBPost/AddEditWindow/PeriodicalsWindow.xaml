@@ -110,7 +110,8 @@
                        Height="30"
                        Width="230"
                        Margin="20 20 20 0"
-                       x:Name="PriceMonth"/>
+                       x:Name="PriceMonth"
+                       PreviewTextInput="Digit_PreviewTextInput"/>
             <TextBlock Grid.Row="4"
                        Text="Цена за три месяца:"
                        FontSize="15"
@@ -125,7 +126,8 @@
                        Height="30"
                        Width="230"
                        Margin="20 20 20 0"
-                      x:Name="PriceThreeMonths"/>
+                      x:Name="PriceThreeMonths"
+                       PreviewTextInput="Digit_PreviewTextInput"/>
             <TextBlock Grid.Row="5"
                        Text="Цена за шесть месяцев:"
                        FontSize="15"
@@ -140,7 +142,8 @@
                        Height="30"
                        Width="230"
                        Margin="20 20 20 0"
-                       x:Name="PriceSixMonths"/>
+                       x:Name="PriceSixMonths"
+                       PreviewTextInput="Digit_PreviewTextInput"/>
             <TextBlock Grid.Row="6"
                        Text="Цена за двенадцать месяце:"
                        FontSize="15"
@@ -155,7 +158,8 @@
                        Height="30"
                        Width="230"
                        Margin="20 20 20 0"
-                       x:Name="PriceTwelveMonths"/>
+                       x:Name="PriceTwelveMonths"
+                       PreviewTextInput="Digit_PreviewTextInput"/>
             <Button Style="{DynamicResource ButtonStyle2}"
                     Grid.Row="7"
                     Width="120"
@@ -175,7 +179,8 @@
                     HorizontalAlignment="Right"
                     Content="добавить"
                     x:Name="AddButton"
-                    Click="Button_Click"/>
+                    Click="Button_Click"
+                    PreviewMouseLeftButtonDown="AddButton_PreviewMouseLeftButtonDown"/>
         </Grid>
     </Border>
 </UserControl>

@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using System.Collections;
 using DBPost.AddEditWindow;
 using DBPost.Windows;
+using System.Text.RegularExpressions;
 
 namespace DBPost.Views
 {
@@ -32,8 +33,51 @@ namespace DBPost.Views
         public SubscriptionsView()
         {
             InitializeComponent();
+
+            CheckSubscriptions();
+
             FillDataGrid();
+
             FillDataGridArchive();
+        }
+        private void CheckSubscriptions()
+        {
+            bool isChanged = false;
+            using (SqlConnection con = new SqlConnection(ConString))
+            {
+
+                SqlCommand cmd = new SqlCommand("SELECT * From Subscriptions", con);
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable subscriptionDataTable = new DataTable("Subscriptions");
+                sda.Fill(subscriptionDataTable);
+                foreach (DataRow row in subscriptionDataTable.Rows)
+                {
+                    if (DateTime.Parse(row["SubscriptionEnd"].ToString()!) < DateTime.Now)
+                    {
+                        string id = row["IDSubscription"].ToString()!;
+                        string idSub = row["FKSubscriber"].ToString()!;
+                        string idPer = row["FKPeriodical"].ToString()!;
+                        string subStart = row["SubscriptionStart"].ToString()!;
+                        string subEnd = row["SubscriptionEnd"].ToString()!;
+                        string issueDate = row["IssueDate"].ToString()!;
+                        string subTerm = row["SubscriptionTerm"].ToString()!;
+                        string price = row["Price"].ToString()!;
+
+                        con.Open();
+
+                        cmd = new($"INSERT INTO Archive(FKSubscriber,FKPeriodical,SubscriptionStart ,SubscriptionEnd,IssueDate,SubscriptionTerm, Price)VALUES({idSub},{idPer},'{subStart}', '{subEnd}','{issueDate}',{subTerm}, {price.Replace(',','.')});", con);
+                        cmd.ExecuteNonQuery();
+
+                        cmd = new("Delete from Subscriptions where IDSubscription="+id, con);
+                        cmd.ExecuteNonQuery();
+
+                        isChanged = true;
+
+                        con.Close();
+                    }
+                }
+                if(isChanged)MessageWindow.Show("Перемещение", "Старые записи помещены в архив.", MessageBoxButton.OK);
+            }
         }
 
         public void FillDataGrid()
@@ -200,7 +244,17 @@ namespace DBPost.Views
                         cmd = new("SELECT\r\ns.FIO as SubscriberName,\r\np.FIO as PostmanName,\r\nper.Title as PeriodicalTitle,\r\nsub.SubscriptionStart,\r\nsub.SubscriptionEnd,\r\nsub.IssueDate\r\nFROM\r\nSubscribers s\r\nJOIN Subscriptions sub ON s.IDSubscriber = sub.FKSubscriber\r\nJOIN Periodicals per ON sub.FKPeriodical = per.IDPeriodical\r\nJOIN Postmen p ON s.FKPostmen = p.IDPostmen\r\nWHERE\r\nMONTH(sub.SubscriptionStart) = MONTH(GETDATE()) OR MONTH(sub.IssueDate) = MONTH(GETDATE())", con);
                         break;
                     case "sixthQueryButton":
-                        cmd = new("SELECT * FROM [dbo].[GetSubscribersByYear] (\r\n   2023\r\n  ,0)", con);
+                        if (FuncSubCount.Text.Length < 1)
+                        {
+                            MessageWindow.Show("Ошибка ввода", "Введите количество подписок!", MessageBoxButton.OK);
+                            return;
+                        }
+                        if(FuncYear.Text.Length < 4)
+                        {
+                            MessageWindow.Show("Ошибка ввода", "Введите корректный год!", MessageBoxButton.OK);
+                            return;
+                        }
+                        cmd = new($"SELECT * FROM [dbo].[GetSubscribersByYear] ({FuncYear.Text},{FuncSubCount.Text})", con);
                         break;
                 }
                 if (cmd != null)
@@ -223,6 +277,10 @@ namespace DBPost.Views
                     dataGridTextColumn.Binding.StringFormat = "dd-MM-yyyy";
                 }
             }
+        }
+        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (Regex.IsMatch(e.Text, "[^0-9]+")) e.Handled = true;
         }
     }
 }
