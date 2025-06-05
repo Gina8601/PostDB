@@ -52,8 +52,8 @@
                        HorizontalAlignment="Left"/>
         <TabControl Style="{StaticResource MaterialDesignFilledTabControl}"
                     HorizontalAlignment="Left">
-            <TabItem Header="Актуальное"
-                     Width="110">
+            <TabItem Header="Актуальные подписки"
+                     Width="180">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="0.25*"/>
@@ -92,8 +92,8 @@
                                                Margin="15 0 0 0"
                                                x:Name="SearchIcon"/>
                     </Grid>
-                 
-                   <DataGrid Style="{DynamicResource DataGridStyle1}"
+
+                    <DataGrid Style="{DynamicResource DataGridStyle1}"
                   CellStyle="{DynamicResource DataGridCellStyle1}"
                   ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}"
                   RowStyle="{DynamicResource DataGridRowStyle1}"
@@ -110,7 +110,8 @@
                                     IsReadOnly="True"
                                     CanUserResize="False"
                                     Width="auto"
-                                    Binding="{Binding FKPeriodical}"/>
+                                    Binding="{Binding FKPeriodical}">
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="Подписчик"
                                     IsReadOnly="True"
                                     CanUserResize="False"
@@ -157,6 +158,169 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
+
+            <TabItem Header="Отчёты" Width="100">
+                <Grid Margin="0,10,0,10" Width="799">
+                    <TabControl Style="{StaticResource MaterialDesignFilledTabControl}">
+                        <TabItem Header="Истекающие подписки">
+                            <Grid Margin="0,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Отчёт по подпискам, срок которых истекает в текущем месяце"
+                                           FontSize="13"
+                                           Margin="10 10 0 10"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           FontFamily="Roboto"
+                                           Foreground="#717588"/>
+
+                                <TextBox x:Name="ReportTextBox"
+                                         Grid.Row="1"
+                                         IsReadOnly="True"
+                                         Background="White"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas"
+                                         Margin="10,0,10,0"/>
+
+                                <StackPanel Grid.Row="2"
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            Margin="0,10,10,0"
+                                            Width="427">
+                                            <Button Style="{DynamicResource ButtonStyle1}"
+                                            Width="200"
+                                            Height="50"
+                                            Margin="0 20 0 0"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Right"
+                                            Content="сформировать отчёт"
+                                            Click="GenerateReportButton_Click"/>
+
+                                    <Button Style="{DynamicResource ButtonStyle1}"
+                                            Width="200"
+                                            Height="50"
+                                            Margin="20 20 0 0"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Right"
+                                            Content="сохранить в файл"
+                                            Click="SaveReportButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Подписки на издание">
+                            <Grid Margin="0,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Отчёт по количеству подписок на издание"
+                                           FontSize="13"
+                                           Margin="10 10 0 10"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center"
+                                           FontFamily="Roboto"
+                                           Foreground="#717588" />
+
+                                <TextBox x:Name="ReportByPeriodicalTextBox"
+                             Grid.Row="1"
+                             IsReadOnly="True"
+                             Background="White"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             FontFamily="Consolas"
+                             Margin="10,0,10,0"/>
+
+                                <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Margin="0,10,10,0"
+                                Width="427">
+                                    <Button Style="{DynamicResource ButtonStyle1}"
+                                            Width="200"
+                                            Height="50"
+                                            Margin="0 20 0 0"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Right"
+                                            Content="сформировать отчёт"
+                                            Click="GenerateReportByPeriodicalButton_Click"/>
+                                    <Button Style="{DynamicResource ButtonStyle1}"
+                                            Width="200"
+                                            Height="50"
+                                            Margin="20 20 0 0"
+                                            VerticalAlignment="Top"
+                                            HorizontalAlignment="Right"
+                                            Content="сохранить в файл"
+                                            Click="SaveReportByPeriodicalButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Нагрузка сотрудников">
+                            <Grid Margin="0,0,0,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Отчёт по нагрузке почтальонов"
+                   FontSize="13"
+                   Margin="10 10 0 10"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Center"
+                   FontFamily="Roboto"
+                   Foreground="#717588" />
+
+                                <TextBox x:Name="ReportByEmployeeTextBox"
+                 Grid.Row="1"
+                 IsReadOnly="True"
+                 Background="White"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 FontFamily="Consolas"
+                 Margin="10,0,10,0"/>
+
+                                <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,10,0"
+                    Width="427">
+                                    <Button Style="{DynamicResource ButtonStyle1}"
+                    Width="200"
+                    Height="50"
+                    Margin="0 20 0 0"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Content="сформировать отчёт"
+                    Click="GenerateReportByEmployeeButton_Click"/>
+
+                                    <Button Style="{DynamicResource ButtonStyle1}"
+                    Width="200"
+                    Height="50"
+                    Margin="20 20 0 0"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Content="сохранить в файл"
+                    Click="SaveReportByEmployeeButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                        
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
             <TabItem Header="Архив"
                      Width="70"
                      >
@@ -166,7 +330,7 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Column="0"
-                       HorizontalAlignment="Right">
+                       HorizontalAlignment="Left">
                         <TextBox x:Name="SearchTextBoxArc"
                                  Style="{DynamicResource TextBoxStyle1}"
                                  Width="255"
@@ -201,7 +365,7 @@
                                     IsReadOnly="True"
                                     CanUserResize="False"
                                     Width="auto"
-                                    Binding="{Binding IDSubscription}"/>
+                                    Binding="{Binding IDArchive}"/>
                             <DataGridTextColumn Header="Издание"
                                     IsReadOnly="True"
                                     CanUserResize="False"
@@ -247,139 +411,7 @@
                     </DataGrid>
                 </Grid>
             </TabItem>
-            <TabItem Header="Запросы"
-                     Width="80">
-                <Grid Width="740"
-                      Margin="0 10 0 0 ">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="0.5*"/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-
-                        <Button Grid.Column="0"
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Запрос 1"
-                                Click="QuerryButtonClick"
-                                x:Name="firstQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Button Grid.Column="1" 
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Запрос 2"
-                                Click="QuerryButtonClick"
-                                x:Name="secondQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Button Grid.Column="2"
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Запрос 3"
-                                Click="QuerryButtonClick"
-                                x:Name="thirdQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Button Grid.Column="3"
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Запрос 4"
-                                Click="QuerryButtonClick"
-                                x:Name="fourthQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Button Grid.Column="0"
-                                Grid.Row="1"
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Процедура"
-                                Click="QuerryButtonClick"
-                                x:Name="fifthQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Button Grid.Column="1"
-                                Grid.Row="1"
-                                Width="150"
-                                Height="50"
-                                Margin="10"
-                                Content="Функция"
-                                Click="QuerryButtonClick"
-                                x:Name="sixthQueryButton"
-                                Style="{StaticResource ButtonStyle1}"/>
-                        <Grid Grid.Column="2"
-                              Grid.Row="1"
-                              Margin="0 10 0 0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="0.5*"/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Text="Кол-во подписок:"
-                                       Grid.Row="0"
-                                       Margin="20 0 0 0"/>
-                            <TextBox Grid.Row="1" 
-                                     Style="{StaticResource TextBoxStyle1}"
-                                     Padding="10 5 0 0"
-                                     FontSize="12"
-                                     MaxLength="10"
-                                     Width="150"
-                                     Height="30"
-                                     Margin="0"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Top"
-                                     x:Name="FuncSubCount"
-                                     PreviewTextInput="Digit_PreviewTextInput"/>
-                            
-                        </Grid>
-                        <Grid Grid.Column="3"
-                              Grid.Row="1"
-                              Margin="0 10 0 0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="0.5*"/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Text="Год:"
-                                       Grid.Row="0"
-                                       Margin="20 0 0 0"/>
-                            <TextBox Grid.Row="1" 
-                                     Style="{StaticResource TextBoxStyle1}"
-                                     Padding="10 5 0 0"
-                                     FontSize="12"
-                                     MaxLength="4"
-                                     Width="150"
-                                     Height="30"
-                                     Margin="0"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Top"
-                                     x:Name="FuncYear"
-                                     PreviewTextInput="Digit_PreviewTextInput"/>
-                        </Grid>
-                        
-                    </Grid>
-                    <DataGrid Style="{DynamicResource DataGridStyle1}"
-                              CellStyle="{DynamicResource DataGridCellStyle1}"
-                              ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}"
-                              RowStyle="{DynamicResource DataGridRowStyle1}"
-                              x:Name="QueriesDataGrid"
-                              AutoGenerateColumns="True"
-                              Grid.Row="1"
-                              IsReadOnly="True"
-                              AutoGeneratingColumn="QueriesDataGrid_AutoGeneratingColumn"/>
-
-                </Grid>
-            </TabItem>
         </TabControl>
-        
+
     </Grid>
 </UserControl>

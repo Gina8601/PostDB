@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DBPost.AddEditWindow"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" 
              mc:Ignorable="d" 
              d:DesignHeight="600" Width="280"
              Grid.Row="0" 
@@ -56,12 +57,14 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
-                <RowDefinition Height="70"/>
-                <RowDefinition Height="80"/>
-                <RowDefinition Height="80"/>
-                <RowDefinition Height="80"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
+                <RowDefinition Height="67"/>
                 <RowDefinition/>
-                <RowDefinition Height="40"/>
             </Grid.RowDefinitions>
         <TextBlock Grid.Row="1"
                    Grid.Column="0"
@@ -70,7 +73,7 @@
                    Height="40"
                    FontFamily="Roboto"
                    FontSize="30"
-                   Foreground="#717588"
+                   Foreground="#ffff"
                    TextAlignment="Center"
                    HorizontalAlignment="Left"
                    Margin="20 5 0 0"
@@ -80,7 +83,7 @@
                        Grid.Row="1"
                        Grid.Column="0"
                        Grid.ColumnSpan="2"
-                       Fill="#717588"
+                       Fill="#ffff"
                        Margin="20 45 20 0"/>
             <TextBlock Grid.Row="2"
                        Text="ФИО:"
@@ -95,11 +98,11 @@
                        Background="White"
                        Height="30"
                        Width="230"
-                       Margin="20 20 20 0"
+                       Margin="20 25 20 0"
                        x:Name="FIO"
                        PreviewTextInput="Text_PreviewTextInput"/>
             <TextBlock Grid.Row="3"
-                       Text="Адрес"
+                       Text="Адрес:"
                        FontSize="15"
                        FontFamily="Roboto"
                        Foreground="#717588"
@@ -111,7 +114,7 @@
                        Background="White"
                        Height="30"
                        Width="230"
-                       Margin="20 20 20 0"
+                       Margin="20 25 20 0"
                        x:Name="Address"/>
             <TextBlock Grid.Row="4"
                        Text="Номер телефона:"
@@ -121,35 +124,38 @@
                        HorizontalAlignment="Left"
                        TextAlignment="Center"
                        Margin="25 10 0 0"/>
-            <TextBox Style="{DynamicResource InputTextBox}"
-                       Grid.Row="4"
-                       Background="White"
-                       Height="30"
-                       Width="230"
-                       Margin="20 20 20 0"
-                       x:Name="PhoneNumber"
-                     PreviewTextInput="Phone_PreviewTextInput"/>
+            <xctk:MaskedTextBox Style="{DynamicResource InputTextBox}"
+                Grid.Row="4"
+                FontSize="15"
+                FontFamily="Roboto"
+                Margin="20 25 20 0"
+                Width="230"
+                Height="30"
+                Mask="+375(00)000-00-00"
+                PromptChar="_"
+                x:Name="PhoneNumber"
+                Background="White"/>
             <Button Style="{DynamicResource ButtonStyle2}"
-                    Grid.Row="5"
+                    Grid.Row="8"
                     Width="120"
                     Height="40"
                     Margin="10 20 0 0"
-                    VerticalAlignment="Bottom"
+                    VerticalAlignment="Top"
                     HorizontalAlignment="Left"
                     Content="отмена"
                     x:Name="CancelButton"
                     Click="Button_Click"/>
         <Button Style="{DynamicResource ButtonStyle2}"
-                    Grid.Row="5"
-                    Width="120"
-                    Height="40"
-                    Margin="0 20 10 0"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Right"
-                    Content="добавить"
-                    x:Name="AddButton"
-                    Click="Button_Click"
-                    PreviewMouseLeftButtonDown="AddButton_PreviewMouseLeftButtonDown"/>
+                   Grid.Row="8"
+                   Width="120"
+                   Height="40"
+                   Margin="0 20 10 0"
+                   VerticalAlignment="Top"
+                   HorizontalAlignment="Right"
+                   Content="добавить"
+                   x:Name="AddButton"
+                   Click="Button_Click"
+                   PreviewMouseLeftButtonDown="AddButton_PreviewMouseLeftButtonDown"/>
         </Grid>
     </Border>
 </UserControl>

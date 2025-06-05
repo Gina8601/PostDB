@@ -1,44 +1,31 @@
 ﻿using DBPost.AddEditWindow;
 using DBPost.Windows;
-using MaterialDesignThemes.Wpf;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace DBPost.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для PostmensView.xaml
-    /// </summary>
+    // Представление для работы с почтальонами
     public partial class PostmensView : UserControl
     {
+        // Строка подключения к базе данных из конфигурационного файла
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
+        // Переменная для хранения списка почтальонов (используется при поиске)
         private IEnumerable? postMens;
         public PostmensView()
         {
             InitializeComponent();
             FillDataGrid();
         }
-
+        
+        // Метод загрузки данных почтальонов из базы данных
         public void FillDataGrid()
         {
-           
-          
             using (SqlConnection con = new SqlConnection(ConString))
             {
                 SqlCommand cmd = new SqlCommand("SELECT * From Postmen", con);
@@ -50,31 +37,48 @@ namespace DBPost.Views
             }
         }
 
+        // Удаление выбранного почтальона
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBoxResult.Yes == MessageWindow.Show("Информационное окно", "Удалить?", MessageBoxButton.YesNo))
             {
                 string id = ((DataRowView)((Button)sender).Tag).Row["IDPostmen"].ToString()!;
-                int rowsAffected;
+                bool hasPostmen = false;
+                // Проверка, обслуживает ли почтальон кого-то из подписчиков
                 using (SqlConnection con = new SqlConnection(ConString))
                 {
-                    SqlCommand cmd = new SqlCommand("Delete from Postmen where IDPostmen=" + id, con);
-                    con.Open();
-                    rowsAffected = cmd.ExecuteNonQuery();
-                    con.Close();
+                    SqlCommand cmd = new SqlCommand($"SELECT * From Subscribers where FKPostmen = {id}", con);
+                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable("Subscribers");
+                    sda.Fill(dt);
+                    hasPostmen = dt.DefaultView.Count > 0;
                 }
-                if (rowsAffected > 0)
-                {
-                    MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
-                }
+                if (hasPostmen)
+                    MessageWindow.Show("Информационное окно", "Перед удалением почтальона необходимо удалить всех подписчиков которых он обслуживает.", MessageBoxButton.OK);
                 else
                 {
-                    MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    int rowsAffected;
+                    using (SqlConnection con = new SqlConnection(ConString))
+                    {
+                        SqlCommand cmd = new SqlCommand("Delete from Postmen where IDPostmen=" + id, con);
+                        con.Open();
+                        rowsAffected = cmd.ExecuteNonQuery();
+                        con.Close();
+                    }
+                    if (rowsAffected > 0)
+                    {
+                        MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
+                    }
+                    else
+                    {
+                        MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    }
+                    FillDataGrid();
                 }
-                FillDataGrid();
             }
         }
 
+        // Открытие окна редактирования существующего почтальона
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -89,6 +93,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(periodicalsWindow);
         }
 
+        // Поиск почтальона по ФИО
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchTextBox.Text.Length > 0)
@@ -105,6 +110,7 @@ namespace DBPost.Views
             }
         }
 
+        // Добавление нового почтальона
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -117,6 +123,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(postmanC);
         }
 
+        // Метод для повторного включения интерфейса после закрытия дочернего окна
         public void EnableWindow()
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;

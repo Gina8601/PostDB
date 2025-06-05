@@ -1,21 +1,11 @@
 ﻿using DBPost.Views;
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Configuration;
 using System.Text.RegularExpressions;
 using DBPost.Windows;
@@ -23,24 +13,22 @@ using System.Windows.Controls.Primitives;
 
 namespace DBPost.AddEditWindow
 {
-    /// <summary>
-    /// Логика взаимодействия для postmen.xaml
-    /// </summary>
     public partial class postmen : UserControl
     {
         private PostmensView PostmensView { get; set; }
-        bool isAdding = true;
-        string? idPostment = string.Empty;
+        bool isAdding = true; // Флаг режима: добавление(true) или редактирование(false)
+        string? idPostment = string.Empty; //// ID почтальона, если редактируем существующую запись
         public postmen(PostmensView postmensView)
         {
             InitializeComponent();
             PostmensView= postmensView;
         }
-
+       
+        // Конструктор для редактирования существующего почтальона с заполнением полей
         public postmen(PostmensView postmensView, DataRowView dataRowView)
         {
           InitializeComponent();
-            isAdding = false;
+            isAdding = false; // Устанавливаем режим редактирования
             PostmensView = postmensView;
             idPostment = dataRowView.Row["IDPostmen"].ToString();
             this.FIO.Text = dataRowView.Row["FIO"].ToString();
@@ -48,6 +36,7 @@ namespace DBPost.AddEditWindow
             this.PhoneNumber.Text = dataRowView.Row["PhoneNumber"].ToString();
         }
 
+        // Обработчик нажатия кнопки Добавить/Сохранить
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (sender as Button == AddButton && !ValidatePostMen()) return;
@@ -79,6 +68,7 @@ namespace DBPost.AddEditWindow
             };
         }
 
+        // Обработчик события обновления разметки — запускает анимацию открытия окна
         private void UserControl_LayoutUpdated(object sender, EventArgs e)
         {
             this.IsEnabled = false;
@@ -90,16 +80,19 @@ namespace DBPost.AddEditWindow
             (FindResource("OpenMenu") as Storyboard)!.Begin();
         }
 
+        // Ограничение ввода для поля ФИО — разрешены только буквы (латиница и кириллица)
         private void Text_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (Regex.IsMatch(e.Text, "[^a-zA-Z]+")) e.Handled = true;
+            if (!Regex.IsMatch(e.Text, "^[a-zA-Zа-яА-ЯёЁ]+$")) e.Handled = true;
         }
 
+        // Ограничение ввода для номера телефона — разрешены цифры, +, -, скобки
         private void Phone_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (Regex.IsMatch(e.Text, @"[^0-9+\-()]+")) e.Handled = true;
         }
 
+        // Валидация данных перед сохранением — проверяем заполнение всех полей
         private bool ValidatePostMen()
         {
             if (FIO.Text.Length < 1)
@@ -120,9 +113,11 @@ namespace DBPost.AddEditWindow
             return true;
         }
 
+        // Обработчик нажатия мыши на кнопку добавления — запускает проверку и событие Click
         private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (ValidatePostMen()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
     }
+
 }

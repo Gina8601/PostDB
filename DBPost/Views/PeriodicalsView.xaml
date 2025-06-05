@@ -73,30 +73,36 @@
                                        x:Name="SearchIcon"/>
             </Grid>
         </Grid>
-        <DataGrid Style="{DynamicResource DataGridStyle1}"
+        <DataGrid x:Name="PeriodicalsDataGrid" 
+                  Style="{DynamicResource DataGridStyle1}"
                   CellStyle="{DynamicResource DataGridCellStyle1}"
                   ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}"
                   RowStyle="{DynamicResource DataGridRowStyle1}"
-                  x:Name="PeriodicalsDataGrid"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  
                   AutoGenerateColumns="False"
                   Grid.Row="1">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="#"
                                     IsReadOnly="True"
+                                    FontFamily="Roboto"
                                     CanUserResize="False"
                                     Width="auto"
                                     Binding="{Binding IDPeriodical}"/>
                 <DataGridTemplateColumn Header="Название изд."
-                                        Width="115"
-                                        IsReadOnly="True"
-                                        CanUserResize="False">
+                        Width="auto"
+                        IsReadOnly="True"
+                        CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Title}"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Title}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+
                 <DataGridTextColumn Header="Цена за 1 мес."
                                     IsReadOnly="True"
                                     CanUserResize="False"

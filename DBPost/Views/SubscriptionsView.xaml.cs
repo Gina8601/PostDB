@@ -1,32 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections;
 using DBPost.AddEditWindow;
 using DBPost.Windows;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
+using System.IO;
 
 namespace DBPost.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для SubscriptionsView.xaml
-    /// </summary> наслушался чего тут музыка не играет
     public partial class SubscriptionsView : UserControl
     {
+        // Строка подключения к БД из конфигурации
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
         private IEnumerable? actSubscriptions;
         private IEnumerable? archiveSubscriptions;
@@ -34,12 +26,14 @@ namespace DBPost.Views
         {
             InitializeComponent();
 
-            CheckSubscriptions();
+            CheckSubscriptions(); // Перемещает просроченные подписки в архив
 
-            FillDataGrid();
+            FillDataGrid(); // Заполняет грид активных подписок
 
-            FillDataGridArchive();
+            FillDataGridArchive(); // Заполняет грид архивных подписок
         }
+
+        // Перемещает просроченные подписки из активных в архив
         private void CheckSubscriptions()
         {
             bool isChanged = false;
@@ -64,7 +58,6 @@ namespace DBPost.Views
                         string price = row["Price"].ToString()!;
 
                         con.Open();
-
                         cmd = new($"INSERT INTO Archive(FKSubscriber,FKPeriodical,SubscriptionStart ,SubscriptionEnd,IssueDate,SubscriptionTerm, Price)VALUES({idSub},{idPer},'{subStart}', '{subEnd}','{issueDate}',{subTerm}, {price.Replace(',','.')});", con);
                         cmd.ExecuteNonQuery();
 
@@ -80,6 +73,7 @@ namespace DBPost.Views
             }
         }
 
+        // Заполнение грида активных подписок из БД
         public void FillDataGrid()
         {
             using (SqlConnection con = new SqlConnection(ConString))
@@ -93,6 +87,7 @@ namespace DBPost.Views
             }
         }
 
+        // Обработка поиска по активным подпискам
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchTextBox.Text.Length > 0)
@@ -109,6 +104,7 @@ namespace DBPost.Views
             }
         }
 
+        // Удаление подписки из активных с подтверждением
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBoxResult.Yes == MessageWindow.Show("Информационное окно", "Удалить?", MessageBoxButton.YesNo))
@@ -134,6 +130,7 @@ namespace DBPost.Views
             }
         }
 
+        // Открытие окна редактирования выбранной подписки
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -148,6 +145,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(subscribtionWindow);
         }
 
+        // Открытие окна добавления новой подписки
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -160,6 +158,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(postmanC);
         }
 
+        // Включение интерфейса после закрытия модального окна
         public void EnableWindow()
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -167,6 +166,7 @@ namespace DBPost.Views
             this.IsEnabled = true;
         }
 
+        // Заполнение грида архивных подписок из БД
         public void FillDataGridArchive()
         {
             using (SqlConnection con = new SqlConnection(ConString))
@@ -180,6 +180,7 @@ namespace DBPost.Views
             }
         }
 
+        // Обработка поиска по архивным подпискам
         private void SearchTextBoxArc_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchTextBoxArc.Text.Length > 0)
@@ -196,15 +197,16 @@ namespace DBPost.Views
             }
         }
 
+        // Удаление записи из архива с подтверждением
         private void ArchiveDeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBoxResult.Yes == MessageWindow.Show("Информационное окно", "Удалить?", MessageBoxButton.YesNo))
             {
-                string id = ((DataRowView)((Button)sender).Tag).Row["IDSubscription"].ToString()!;
+                string id = ((DataRowView)((Button)sender).Tag).Row["IDArchive"].ToString()!;
                 int rowsAffected;
                 using (SqlConnection con = new SqlConnection(ConString))
                 {
-                    SqlCommand cmd = new SqlCommand("Delete from Archive where IDSubscription=" + id, con);
+                    SqlCommand cmd = new SqlCommand("Delete from Archive where IDArchive=" + id, con);
                     con.Open();
                     rowsAffected = cmd.ExecuteNonQuery();
                     con.Close();
@@ -221,66 +223,264 @@ namespace DBPost.Views
             }
         }
 
-        private void QuerryButtonClick(object sender, RoutedEventArgs e)
+        // Фильтрация ввода только цифр (для текстбоксов)
+        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
+            if (Regex.IsMatch(e.Text, "[^0-9]+")) e.Handled = true;
+        }
+
+        // Генерация отчёта по подпискам, срок которых истекает в текущем месяце
+        private void GenerateReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            var sb = new StringBuilder();
+
+            string query = @"
+                    SELECT sub.FIO, p.Title, s.SubscriptionEnd
+                    FROM dbo.Subscriptions s
+                    JOIN dbo.Subscribers sub ON s.FKSubscriber = sub.IDSubscriber
+                    JOIN dbo.Periodicals p ON s.FKPeriodical = p.IDPeriodical
+                    WHERE s.SubscriptionEnd BETWEEN @Today AND @inMonth
+                    ORDER BY s.SubscriptionEnd";
+
             using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand cmd = new SqlCommand(query, con))
             {
-                SqlCommand? cmd = null;
-                switch ((sender as Button)!.Name)
+                var today = DateTime.Today;
+                var firstDayNextMonth = new DateTime(today.Year, today.Month, 1).AddMonths(1);
+
+                cmd.Parameters.AddWithValue("@Today", today);
+                cmd.Parameters.AddWithValue("@inMonth", firstDayNextMonth);
+
+                con.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
-                    case "firstQueryButton":
-                        cmd = new("SELECT Subscribers.*\r\nFROM Subscribers\r\nJOIN Subscriptions ON Subscribers.IDSubscriber = Subscriptions.IDSubscription\r\nJOIN Periodicals ON Subscriptions.IDSubscription = Periodicals.IDPeriodical\r\nWHERE Periodicals.title = 'Вечерний Минск';", con);
-                        break;
-                    case "secondQueryButton":
-                        cmd = new("SELECT Periodicals.Title, COUNT(*) AS subscription_count\r\nFROM Subscriptions\r\nJOIN Periodicals ON Subscriptions.FKPeriodical = Periodicals.IDPeriodical\r\nGROUP BY Periodicals.Title;", con);
-                        break;
-                    case "thirdQueryButton":
-                        cmd = new("SELECT FIO, Address, COUNT(*) AS subscription_count\r\nFROM (\r\nSELECT IDSubscriber AS id, FIO, Address\r\nFROM Subscribers\r\nUNION ALL\r\nSELECT IDPostmen AS id, FIO, Address\r\nFROM Postmen\r\n) AS people\r\nJOIN Subscriptions ON people.id = Subscriptions.FKSubscriber\r\nGROUP BY people.id, people.FIO, people.Address;", con);
-                        break;
-                    case "fourthQueryButton":
-                        cmd = new("SELECT\r\nDATEPART(QUARTER, s.IssueDate) as Quarter,\r\nSUM(p.PriceThreeMonths * s.SubscriptionTerm) as QuarterSum\r\nFROM\r\nSubscriptions s\r\nJOIN Periodicals p ON s.FKPeriodical = p.IDPeriodical\r\nGROUP BY\r\nDATEPART(QUARTER, s.IssueDate)", con);
-                        break;
-                    case "fifthQueryButton":
-                        cmd = new("SELECT\r\ns.FIO as SubscriberName,\r\np.FIO as PostmanName,\r\nper.Title as PeriodicalTitle,\r\nsub.SubscriptionStart,\r\nsub.SubscriptionEnd,\r\nsub.IssueDate\r\nFROM\r\nSubscribers s\r\nJOIN Subscriptions sub ON s.IDSubscriber = sub.FKSubscriber\r\nJOIN Periodicals per ON sub.FKPeriodical = per.IDPeriodical\r\nJOIN Postmen p ON s.FKPostmen = p.IDPostmen\r\nWHERE\r\nMONTH(sub.SubscriptionStart) = MONTH(GETDATE()) OR MONTH(sub.IssueDate) = MONTH(GETDATE())", con);
-                        break;
-                    case "sixthQueryButton":
-                        if (FuncSubCount.Text.Length < 1)
-                        {
-                            MessageWindow.Show("Ошибка ввода", "Введите количество подписок!", MessageBoxButton.OK);
-                            return;
-                        }
-                        if(FuncYear.Text.Length < 4)
-                        {
-                            MessageWindow.Show("Ошибка ввода", "Введите корректный год!", MessageBoxButton.OK);
-                            return;
-                        }
-                        cmd = new($"SELECT * FROM [dbo].[GetSubscribersByYear] ({FuncYear.Text},{FuncSubCount.Text})", con);
-                        break;
+                    if (!reader.HasRows)
+                    {
+                        MessageWindow.Show("Информационное окно", "Подписок, срок которых истекает в текущем месяце, нет", MessageBoxButton.OK);
+                        return;
+                    }
+
+                    sb.AppendLine("Отчёт по подпискам, срок которых истекает в текущем месяце:");
+                    sb.AppendLine("-----------------------------------------------------------");
+
+                    int count = 1;
+                    while (reader.Read())
+                    {
+                        string fio = reader.GetString(0);
+                        string title = reader.GetString(1);
+                        DateTime endDate = reader.GetDateTime(2);
+
+                        sb.AppendLine($"{count}. {fio} — подписка на \"{title}\" истекает {endDate:dd-MM-yyyy}");
+                        count++;
+                    }
                 }
-                if (cmd != null)
+            }
+
+            ReportTextBox.Text = sb.ToString();
+        }
+
+        // Сохранение сформированного отчёта в файл
+        private void SaveReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ReportTextBox.Text))
+            {
+                MessageWindow.Show("Информационное окно.", "Сначала сформируйте отчёт", MessageBoxButton.OK);
+                return;
+            }
+
+            string monthName = DateTime.Now.ToString("MMMM", new System.Globalization.CultureInfo("ru-RU"));
+            string fileName = $"Отчет по подпискам за {monthName}.txt";
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Текстовый файл (*.txt)|*.txt",
+                FileName = fileName
+            };
+
+            if (saveFileDialog.ShowDialog() == true) 
+            {
+                try
                 {
-                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
-                    DataTable dt = new DataTable("Querry");
-                    sda.Fill(dt);
-                    QueriesDataGrid.ItemsSource = dt.DefaultView;
+                    File.WriteAllText(saveFileDialog.FileName, ReportTextBox.Text, Encoding.UTF8);
+                    MessageWindow.Show("Информационное окно.", "Отчёт успешно сохранён", MessageBoxButton.OK);
+                }
+                catch (Exception ex)
+                {
+                    MessageWindow.Show("Информационное окно", $"Ошибка при сохранении файла:\n{ex.Message}", MessageBoxButton.OK);
                 }
             }
         }
 
-        private void QueriesDataGrid_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        // Сохранение отчёта по количеству подписок на издания
+        private void SaveReportByPeriodicalButton_Click(object sender, RoutedEventArgs e)
         {
-            if (e.PropertyType == typeof(DateTime))
+            if (string.IsNullOrWhiteSpace(ReportByPeriodicalTextBox.Text))
             {
-                DataGridTextColumn? dataGridTextColumn = e.Column as DataGridTextColumn;
-                if (dataGridTextColumn != null)
+                MessageWindow.Show("Информационное окно.", "Сначала сформируйте отчёт", MessageBoxButton.OK);
+                return;
+            }
+
+            string fileName = $"Отчет по количеству подписок.txt";
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Текстовый файл (*.txt)|*.txt",
+                FileName = fileName
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
                 {
-                    dataGridTextColumn.Binding.StringFormat = "dd-MM-yyyy";
+                    File.WriteAllText(saveFileDialog.FileName, ReportByPeriodicalTextBox.Text, Encoding.UTF8);
+                    MessageWindow.Show("Информационное окно.", "Отчёт успешно сохранён", MessageBoxButton.OK);
+                }
+                catch (Exception ex)
+                {
+                    MessageWindow.Show("Информационное окно", $"Ошибка при сохранении файла:\n{ex.Message}", MessageBoxButton.OK);
                 }
             }
         }
-        private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+
+        // Генерация отчёта по количеству подписок на каждое издание
+        private void GenerateReportByPeriodicalButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Regex.IsMatch(e.Text, "[^0-9]+")) e.Handled = true;
+            var sb = new StringBuilder();
+
+            string query = @"
+            SELECT p.Title, COUNT(*) AS SubscriptionCount
+            FROM dbo.Subscriptions s
+            JOIN dbo.Periodicals p ON s.FKPeriodical = p.IDPeriodical
+            GROUP BY p.Title
+            ORDER BY SubscriptionCount DESC";
+
+            using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                con.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (!reader.HasRows)
+                    {
+                        MessageWindow.Show("Информационное окно", "Нет данных о подписках.", MessageBoxButton.OK);
+                        return;
+                    }
+
+                    sb.AppendLine("Отчёт по количеству подписок на издания:");
+                    sb.AppendLine("----------------------------------------");
+
+                    int count = 1;
+                    while (reader.Read())
+                    {
+                        string title = reader.GetString(0);
+                        int subscriptionCount = reader.GetInt32(1);
+                        string word = GetSubscriptionWord(subscriptionCount);
+
+                        sb.AppendLine($"{count}. \"{title}\" — {subscriptionCount} {word}");
+                        count++;
+                    }
+                }
+            }
+
+            ReportByPeriodicalTextBox.Text = sb.ToString();
+        }
+
+        // Подбор правильного слова в зависимости от количества подписок
+        private string GetSubscriptionWord(int count)
+        {
+            if ((count % 10 == 1) && (count % 100 != 11))
+                return "подписка";
+            else if ((count % 10 >= 2 && count % 10 <= 4) && !(count % 100 >= 12 && count % 100 <= 14))
+                return "подписки";
+            else
+                return "подписок";
+        }
+
+        // Сохранение отчёта по нагрузке почтальонов
+        private void SaveReportByEmployeeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ReportByEmployeeTextBox.Text))
+            {
+                MessageWindow.Show("Информационное окно.", "Сначала сформируйте отчёт", MessageBoxButton.OK);
+                return;
+            }
+
+            string fileName = $"Отчет по нагрузке почтальонов.txt";
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Текстовый файл (*.txt)|*.txt",
+                FileName = fileName
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    File.WriteAllText(saveFileDialog.FileName, ReportByEmployeeTextBox.Text, Encoding.UTF8);
+                    MessageWindow.Show("Информационное окно.", "Отчёт успешно сохранён", MessageBoxButton.OK);
+                }
+                catch (Exception ex)
+                {
+                    MessageWindow.Show("Информационное окно", $"Ошибка при сохранении файла:\n{ex.Message}", MessageBoxButton.OK);
+                }
+            }
+        }
+        // Универсальный метод для правильного склонения слов
+        private string GetPluralForm(int number, string one, string few, string many)
+        {
+            number = Math.Abs(number) % 100;
+            int n1 = number % 10;
+
+            if (number > 10 && number < 20) return many;
+            if (n1 > 1 && n1 < 5) return few;
+            if (n1 == 1) return one;
+            return many;
+        }
+
+        // Генерация отчёта по количеству подписчиков, закреплённых за сотрудниками
+        private void GenerateReportByEmployeeButton_Click(object sender, RoutedEventArgs e)
+        {
+            var sb = new StringBuilder();
+
+            string query = @"
+                SELECT p.FIO AS PostmanName, COUNT(s.IDSubscriber) AS SubscriberCount
+                FROM dbo.Postmen p
+                LEFT JOIN dbo.Subscribers s ON p.IDPostmen = s.FKPostmen
+                GROUP BY p.FIO
+                ORDER BY SubscriberCount DESC;";
+
+            using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand cmd = new SqlCommand(query, con))
+            {
+                con.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (!reader.HasRows)
+                    {
+                        MessageWindow.Show("Информационное окно", "Данные по сотрудникам отсутствуют", MessageBoxButton.OK);
+                        return;
+                    }
+
+                    sb.AppendLine("Отчёт по количеству подписчиков, закреплённых за сотрудниками:");
+                    sb.AppendLine("--------------------------------------------------------------");
+
+                    int count = 1;
+                    while (reader.Read())
+                    {
+                        string fio = reader.GetString(0);
+                        int subs = reader.GetInt32(1);
+                        string plural = GetPluralForm(subs, "подписчик", "подписчика", "подписчиков");
+                        sb.AppendLine($"{count}. Сотрудник {fio} обслуживает {subs} {plural}");
+                        count++;
+                    }
+                }
+            }
+
+            ReportByEmployeeTextBox.Text = sb.ToString();
         }
     }
 }

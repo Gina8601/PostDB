@@ -1,29 +1,17 @@
 ﻿using DBPost.Views;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace DBPost
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+    // Главный класс окна приложения, реализующий интерфейс уведомления об изменении свойств
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-        private UserControl? currentControl;
+        private UserControl? currentControl; // Текущий отображаемый пользовательский контрол
+        // Свойство с уведомлением об изменении, чтобы UI обновлялся при смене контрола
         public UserControl? CurrentControl 
         {
             get { return currentControl; }
@@ -33,6 +21,8 @@ namespace DBPost
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentControl))); 
             } 
         }
+
+        // Конструктор главного окна
         public MainWindow()
         {
             InitializeComponent();
@@ -40,6 +30,7 @@ namespace DBPost
             CurrentControl = new SubscribersView();
         }
 
+        // Обработчик движения мыши по окну — для возможности перемещения окна при зажатой левой кнопке
         private void Window_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
@@ -48,11 +39,13 @@ namespace DBPost
             }
         }
 
+        // Обработчик нажатия кнопки закрытия окна
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
 
+        // Ниже идут обработчики для переключения отображаемого контрола при выборе соответствующей радио-кнопки
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             CurrentControl = new SubscribersView();

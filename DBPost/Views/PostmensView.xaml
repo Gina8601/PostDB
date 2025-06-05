@@ -91,24 +91,28 @@
                                     Width="auto"
                                     Binding="{Binding IDPostmen}"/>
                 <DataGridTemplateColumn Header="ФИО"
-                                        Width="190"
+                                        Width="240"
                                         IsReadOnly="True"
                                         CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding FIO}"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding FIO}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Адрес"
-                                        Width="250"
+                                        Width="270"
                                         IsReadOnly="True"
                                         CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Address}"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding Address}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

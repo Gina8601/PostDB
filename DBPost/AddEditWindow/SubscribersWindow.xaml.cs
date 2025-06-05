@@ -1,37 +1,27 @@
 ﻿using DBPost.Views;
 using DBPost.Windows;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace DBPost.AddEditWindow
 {
-    /// <summary>
-    /// Логика взаимодействия для subscribers.xaml
-    /// </summary>
     public partial class subscribers : UserControl
     {
+        // Строка подключения к базе данных из конфигурационного файла
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
         private SubscribersView SubscribersView { get; set; }
-        bool isAdding = true;
+        bool isAdding = true; // Флаг режима: добавление (true) или редактирование (false)
         string? idSubscriber = string.Empty;
+
+        // Конструктор для добавления нового подписчика
         public subscribers (SubscribersView subscribersView)
         {
             InitializeComponent();
@@ -39,14 +29,7 @@ namespace DBPost.AddEditWindow
             using (SqlConnection con = new SqlConnection(ConString))
             {
                 con.Open();
-                SqlDataAdapter adapter = new ($"Select* from" +
-                    $"(" +
-                    $"Select p.IDPostmen, p.FIO, count(s.FKPostmen) as c from Postmen as p " +
-                    $"inner join " +
-                    $"Subscribers as s on s.FKPostmen = p.IDPostmen group by p.IDPostmen, p.FIO, s.FKPostmen " +
-                    $"Union " +
-                    $"Select IDPostmen, FIO, 0 as c from Postmen where IDPostmen not in (Select FKPostmen from Subscribers)) as u " +
-                    $"where u.c < (Select avg(FKPostmen) from Subscribers)", con);
+                SqlDataAdapter adapter = new("Select * from Postmen", con);
                 DataTable table = new("Postmen");
                 adapter.Fill(table);
                 FKPostmen.ItemsSource = table.DefaultView;
@@ -54,6 +37,8 @@ namespace DBPost.AddEditWindow
                 con.Close();
             }
         }
+
+        // Конструктор для редактирования существующего подписчика
         public subscribers(SubscribersView subscribersView, DataRowView dataRowView)
         {
             InitializeComponent();
@@ -66,15 +51,7 @@ namespace DBPost.AddEditWindow
             using (SqlConnection con = new SqlConnection(ConString))
             {
 
-                SqlDataAdapter adapter = new($"Select* from" +
-                    $"(" +
-                    $"Select p.IDPostmen, p.FIO, count(s.FKPostmen) as c from Postmen as p " +
-                    $"inner join " +
-                    $"Subscribers as s on s.FKPostmen = p.IDPostmen group by p.IDPostmen, p.FIO, s.FKPostmen " +
-                    $"Union " +
-                    $"Select IDPostmen, FIO, 0 as c from Postmen where IDPostmen not in (Select FKPostmen from Subscribers)" +
-                    $") as u " +
-                    $"where u.c < (Select avg(FKPostmen) from Subscribers) or u.IDPostmen = "+ dataRowView.Row["FKPostmen"], con);
+                SqlDataAdapter adapter = new("Select * from Postmen", con);
                 DataTable table = new("Postmen");
                 adapter.Fill(table);
                 FKPostmen.ItemsSource = table.DefaultView;
@@ -85,7 +62,8 @@ namespace DBPost.AddEditWindow
                 con.Close();
             }
         }
-       
+
+        // Обработчик нажатия кнопки (Добавить / Сохранить)
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.IsEnabled = false;
@@ -118,6 +96,7 @@ namespace DBPost.AddEditWindow
 
         }
 
+        // Обработчик обновления разметки — запускает анимацию открытия окна
         private void UserControl_LayoutUpdated(object sender, EventArgs e)
         {
             this.IsEnabled = false;
@@ -129,16 +108,19 @@ namespace DBPost.AddEditWindow
             (FindResource("OpenMenu") as Storyboard)!.Begin();
         }
 
+        // Ограничение ввода для текстовых полей (ФИО и т.п.) — разрешаем только буквы
         private void Text_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (Regex.IsMatch(e.Text, "[^a-zA-Z]+")) e.Handled = true;
+            if (!Regex.IsMatch(e.Text, "^[a-zA-Zа-яА-ЯёЁ]+$")) e.Handled = true;
         }
 
+        // Ограничение ввода для номера телефона — разрешаем цифры, +, -, скобки
         private void Phone_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (Regex.IsMatch(e.Text, @"[^0-9+\-()]+")) e.Handled = true;
         }
 
+        // Проверка корректности заполнения всех обязательных полей перед сохранением
         private bool ValidateSubscriber()
         {
             if(FIO.Text.Length < 1)
@@ -164,6 +146,7 @@ namespace DBPost.AddEditWindow
             return true;
         }
 
+        // Обработчик нажатия мыши на кнопку добавления — сначала проверяем валидацию, затем вызываем Click
         private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         { 
             if (ValidateSubscriber()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));

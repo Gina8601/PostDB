@@ -1,34 +1,24 @@
 ﻿using DBPost.Views;
 using DBPost.Windows;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 
 namespace DBPost.AddEditWindow
 {
-    /// <summary>
-    /// Логика взаимодействия для periodicals.xaml
-    /// </summary>
     public partial class periodicals : UserControl
     {
+        // Ссылка на родительское окно/представление с таблицей изданий
         private PeriodicalsView PeriodicalsView { get; set; }
+        // Флаг, указывающий режим: добавление (true) или редактирование (false)
         bool isAdding = true;
         string? idPeriodical = string.Empty;
         public periodicals(PeriodicalsView periodicalsView)
@@ -37,10 +27,11 @@ namespace DBPost.AddEditWindow
             PeriodicalsView = periodicalsView;
         }
 
+        // Конструктор для редактирования существующего издания с заполнением полей
         public periodicals(PeriodicalsView periodicalsView, DataRowView dataRowView)
         {
             InitializeComponent();
-            isAdding = false;
+            isAdding = false; // Режим редактирования
             PeriodicalsView = periodicalsView;
             idPeriodical = dataRowView.Row["IDPeriodical"].ToString();
             this.Title.Text = dataRowView.Row["Title"].ToString();
@@ -50,10 +41,12 @@ namespace DBPost.AddEditWindow
             this.PriceTwelveMonths.Text = dataRowView.Row["PriceTwelveMonths"].ToString();
         }
 
+        // Обработчик нажатия кнопки Добавить/Сохранить
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            this.IsEnabled = false;
+            this.IsEnabled = false; // Блокируем управление во время анимации закрытия
             (FindResource("CloseMenu") as Storyboard)!.Completed += (s, a) => {
+                // После завершения анимации закрываем окно и удаляем контрол из родителя
                 (this.Parent as Grid)!.Children.Remove(this);
                 PeriodicalsView.EnableWindow();
                 if ((sender as Button) == AddButton)
@@ -65,10 +58,12 @@ namespace DBPost.AddEditWindow
                         SqlCommand cmd;
                         if (isAdding)
                         {
+                            // Вставляем новую запись
                             cmd = new SqlCommand($"INSERT INTO Periodicals (Title, PriceMonth, PriceThreeMonths, PriceSixMonths, PriceTwelveMonths) Values ('{Title.Text}',{PriceMonth.Text},{PriceThreeMonths.Text}, {PriceThreeMonths.Text}, {PriceTwelveMonths.Text})", con);
                         }
                         else
                         {
+                            // Обновляем существующую запись по ID
                             cmd = new SqlCommand($"Update Periodicals Set Title='{Title.Text}', PriceMonth={PriceMonth.Text}, PriceThreeMonths={PriceThreeMonths.Text}, PriceSixMonths={PriceSixMonths.Text}, PriceTwelveMonths={PriceTwelveMonths.Text} where IDPeriodical={idPeriodical}", con);
                         }
                         cmd.ExecuteNonQuery();
@@ -79,6 +74,7 @@ namespace DBPost.AddEditWindow
             };
         }
 
+        // Обработчик события обновления разметки, запускающий анимацию открытия меню
         private void UserControl_LayoutUpdated(object sender, EventArgs e)
         {
             this.IsEnabled = false;
@@ -90,11 +86,13 @@ namespace DBPost.AddEditWindow
             (FindResource("OpenMenu") as Storyboard)!.Begin();
         }
 
+        // Ограничение ввода в поля с ценами — разрешаем только цифры и точку
         private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (Regex.IsMatch(e.Text, "[^0-9.]+")) e.Handled = true;
         }
 
+        // Валидация данных перед сохранением
         private bool ValidatePeriodical()
         {
             if (Title.Text.Length < 1)
@@ -125,6 +123,7 @@ namespace DBPost.AddEditWindow
             return true;
         }
 
+        // Обработчик нажатия мыши по кнопке добавления, запускающий проверку и событие Click
         private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (ValidatePeriodical()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));

@@ -1,39 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections;
 using DBPost.AddEditWindow;
 using DBPost.Windows;
 
 namespace DBPost.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для SubscribersView.xaml
-    /// </summary>
+    // Представление (UserControl) для работы с подписчиками
     public partial class SubscribersView : UserControl
     {
+        // Получаем строку подключения из конфигурационного файла
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
-        private IEnumerable? subscribers;
+        private IEnumerable? subscribers; // Список подписчиков (хранится для фильтрации)
         public SubscribersView()
         {
             InitializeComponent();
             FillDataGrid();
         }
 
+        // Метод для заполнения DataGrid данными из таблицы Subscribers
         public void FillDataGrid()
         {
             
@@ -49,6 +38,7 @@ namespace DBPost.Views
             }
         }
 
+        // Обработчик изменения текста в поле поиска
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchTextBox.Text.Length > 0)
@@ -65,31 +55,48 @@ namespace DBPost.Views
             }
         }
 
+        // Обработчик нажатия кнопки удаления подписчика
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBoxResult.Yes == MessageWindow.Show("Информационное окно", "Удалить?", MessageBoxButton.YesNo))
             {
                 string id = ((DataRowView)((Button)sender).Tag).Row["IDSubscriber"].ToString()!;
-                int rowsAffected;
+                bool HasSubsc = false;
                 using (SqlConnection con = new SqlConnection(ConString))
                 {
-                    SqlCommand cmd = new SqlCommand("Delete from Subscribers where IDSubscriber=" + id, con);
-                    con.Open();
-                    rowsAffected = cmd.ExecuteNonQuery();
-                    con.Close();
+                    SqlCommand cmd = new SqlCommand($"SELECT * From Subscriptions where FKSubscriber = {id}", con);
+                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable("Subscriptions");
+                    sda.Fill(dt);
+                    HasSubsc = dt.DefaultView.Count > 0;
                 }
-                if (rowsAffected > 0)
-                {
-                    MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
-                }
+                if (HasSubsc)
+                    MessageWindow.Show("Информационное окно", "Перед удалением подписчика необходимо удалить все его подписки.", MessageBoxButton.OK);
                 else
                 {
-                    MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    int rowsAffected;
+                    using (SqlConnection con = new SqlConnection(ConString))
+                    {
+                        SqlCommand cmd = new SqlCommand("Delete from Subscribers where IDSubscriber=" + id, con);
+                        con.Open();
+                        rowsAffected = cmd.ExecuteNonQuery();
+                        con.Close();
+                    }
+                    if (rowsAffected > 0)
+                    {
+                        MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
+                    }
+                    else
+                    {
+                        MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    }
+                    FillDataGrid();
                 }
-                FillDataGrid();
+                
             }
         }
 
+        // Обработчик кнопки редактирования подписчика
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -103,6 +110,8 @@ namespace DBPost.Views
             Grid baseContainer = mainWindow.BaseContainer;
             baseContainer?.Children.Add(subscriberWindow);
         }
+
+        // Обработчик кнопки добавления нового подписчика
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -115,6 +124,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(ubscriberWindow);
         }
 
+        // Метод для повторного включения меню и активного окна после закрытия окна добавления/редактирования
         public void EnableWindow()
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;

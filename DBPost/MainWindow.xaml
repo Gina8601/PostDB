@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DBPost"
         mc:Ignorable="d"
-        Title="DBPost" Height="600" Width="1055"
+        Title="DBPost" Height="600" Width="1100"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -46,32 +46,34 @@
                             CornerRadius="20" 
                             Margin="15,20,15,20">
                         <DockPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <Image Source="/img/belpost.png"
+                            <Image Source="/img/mail.png"
                                    Width="60"
                                    Height="60"
-                                   Margin="10,0,0,10"
+                                   Margin="30,0,0,0"
                                    RenderOptions.BitmapScalingMode="HighQuality"/>
-                            <TextBlock Text="БЕЛПОЧТА"
+                            <TextBlock
+                                       FontFamily="Roboto"
+                                       FontWeight="SemiBold"
                                        FontSize="25"
-                                       Margin="-5,45,0,0"
-                                       Foreground="White"/>
-                            <ToggleButton Width="30"
-                                          Margin="10,1,0,0"
-                                          Height="60"
-                                          Style="{StaticResource HideMenuButton}"/>
+                                       Margin="10,47,0,0"
+                                       Foreground="White"><Run Language="ru-ru" Text="ПочтаЛайт"/><LineBreak/><Run Language="ru-ru"/></TextBlock>
                         </DockPanel>
                     </Border>
                     <StackPanel Grid.Row="1" Grid.RowSpan="2">
                         <RadioButton Content="Подписчики" 
+                                     FontFamily="Roboto"
                                      FontSize="20" 
                                      Style="{StaticResource MenuRadioButtons}" IsChecked="True" Checked="RadioButton_Checked"/>
                         <RadioButton Content="Почтальоны" 
+                                     FontFamily="Roboto"
                                      FontSize="20" 
                                      Style="{StaticResource MenuRadioButtons}" Checked="RadioButton_Checked_1"/>
                         <RadioButton Content="Периодика" 
+                                     FontFamily="Roboto"
                                      FontSize="20" 
                                      Style="{StaticResource MenuRadioButtons}" Checked="RadioButton_Checked_2"/>
                         <RadioButton Content="Подписки" 
+                                     FontFamily="Roboto"
                                      FontSize="20" 
                                      Style="{StaticResource MenuRadioButtons}"
                                      Checked="RadioButton_Checked_3"/>

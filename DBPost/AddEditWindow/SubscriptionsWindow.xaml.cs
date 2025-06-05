@@ -1,43 +1,35 @@
 ﻿using DBPost.Views;
 using DBPost.Windows;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Net;
-using System.Text;
+using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace DBPost.AddEditWindow
 {
-    /// <summary>
-    /// Логика взаимодействия для subscriptions.xaml
-    /// </summary>
     public partial class subscriptions : UserControl
     {
+        // Строка подключения к базе данных из файла конфигурации
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
         private SubscriptionsView SubscriptionsView { get; set; }
 
-        bool isAdding = true;
+        bool isAdding = true; // Флаг, указывающий, добавляем ли мы новую запись
         string? idSubscription = string.Empty;
+
+        // Конструктор для добавления новой подписки
         public subscriptions (SubscriptionsView subscriptionsView)
         {
             InitializeComponent();
             SubscriptionsView = subscriptionsView;
+            // Устанавливаем текущую дату как дату оформления
+            IssueDate.Text = DateTime.Now.ToString("dd-MM-yyyy");
             using (SqlConnection con = new SqlConnection(ConString))
             {
                 con.Open();
@@ -58,17 +50,20 @@ namespace DBPost.AddEditWindow
             }
         }
 
+        // Конструктор для редактирования подписки
         public subscriptions(SubscriptionsView subscriptionsView, DataRowView dataRowView)
         {
             InitializeComponent();
             isAdding = false;
+
             SubscriptionsView = subscriptionsView;
             this.idSubscription = dataRowView.Row["IDSubscription"].ToString();
-            this.SubscriptionStart.Text = DateTime.Parse(dataRowView.Row["SubscriptionStart"].ToString()!).ToShortDateString();
-            this.SubscriptionEnd.Text = DateTime.Parse(dataRowView.Row["SubscriptionEnd"].ToString()!).ToShortDateString();
-            this.IssueDate.Text = DateTime.Parse(dataRowView.Row["IssueDate"].ToString()!).ToShortDateString();
+            this.SubscriptionStart.Text = DateTime.Parse(dataRowView.Row["SubscriptionStart"].ToString()!).ToString("dd-MM-yyyy");
+            this.SubscriptionEnd.Text = DateTime.Parse(dataRowView.Row["SubscriptionEnd"].ToString()!).ToString("dd-MM-yyyy");
+            this.IssueDate.Text = DateTime.Parse(dataRowView.Row["IssueDate"].ToString()!).ToString("dd-MM-yyyy");
             this.SubscriptionTerm.Text = dataRowView.Row["SubscriptionTerm"].ToString();
             this.Price.Text = dataRowView.Row["Price"].ToString();
+
             using (SqlConnection con = new SqlConnection(ConString))
             {
                 con.Open();
@@ -94,6 +89,7 @@ namespace DBPost.AddEditWindow
             }
         }
 
+        // Обработка кнопки "Сохранить" (добавить или обновить)
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.IsEnabled = false;
@@ -113,14 +109,31 @@ namespace DBPost.AddEditWindow
                         SqlCommand cmd;
                         if (isAdding)
                         {
-                            cmd = new ($"INSERT INTO Subscriptions (FKSubscriber, FKPeriodical, SubscriptionStart, SubscriptionEnd, IssueDate, SubscriptionTerm, Price) Values" +
-                            $" ({idSub}, {idPer}, '{SubscriptionStart.Text}', '{SubscriptionEnd.Text}', '{IssueDate.Text}', {SubscriptionTerm.Text}, {Price.Text.Replace(',', '.')})", con);
+                            cmd = new SqlCommand("INSERT INTO Subscriptions (FKSubscriber, FKPeriodical, SubscriptionStart, SubscriptionEnd, IssueDate, SubscriptionTerm, Price) " +
+                                                 "VALUES (@FKSubscriber, @FKPeriodical, @Start, @End, @Issue, @Term, @Price)", con);
                         }
                         else
                         {
-                            cmd = new($"Update Subscriptions Set FKSubscriber={idSub}, FKPeriodical={idPer}, SubscriptionStart='{this.SubscriptionStart.Text}'" +
-                                $", SubscriptionEnd='{this.SubscriptionEnd.Text}', IssueDate='{this.IssueDate.Text}', SubscriptionTerm={this.SubscriptionTerm.Text}, Price={Price.Text.Replace(',','.')} where IDSubscription={idSubscription}", con);
+                            cmd = new SqlCommand("UPDATE Subscriptions SET FKSubscriber = @FKSubscriber, FKPeriodical = @FKPeriodical, " +
+                                                 "SubscriptionStart = @Start, SubscriptionEnd = @End, IssueDate = @Issue, " +
+                                                 "SubscriptionTerm = @Term, Price = @Price WHERE IDSubscription = @ID", con);
                         }
+
+                        // Преобразуем строки из TextBox в DateTime и другие типы
+                        cmd.Parameters.AddWithValue("@FKSubscriber", idSub);
+                        cmd.Parameters.AddWithValue("@FKPeriodical", idPer);
+
+                        // ВАЖНО: DateTime.ParseExact по нужному формату
+                        cmd.Parameters.AddWithValue("@Start", DateTime.ParseExact(SubscriptionStart.Text, "dd-MM-yyyy", CultureInfo.InvariantCulture));
+                        cmd.Parameters.AddWithValue("@End", DateTime.ParseExact(SubscriptionEnd.Text, "dd-MM-yyyy", CultureInfo.InvariantCulture));
+                        cmd.Parameters.AddWithValue("@Issue", DateTime.ParseExact(IssueDate.Text, "dd-MM-yyyy", CultureInfo.InvariantCulture));
+
+                        cmd.Parameters.AddWithValue("@Term", int.Parse(SubscriptionTerm.Text));
+                        cmd.Parameters.AddWithValue("@Price", decimal.Parse(Price.Text.Replace(',', '.'), CultureInfo.InvariantCulture));
+
+                        if (!isAdding)
+                            cmd.Parameters.AddWithValue("@ID", idSubscription);
+
                         cmd.ExecuteNonQuery();
                         con.Close();
                     }
@@ -129,6 +142,7 @@ namespace DBPost.AddEditWindow
             };
         }
 
+        // Анимация открытия формы
         private void UserControl_LayoutUpdated(object sender, EventArgs e)
         {
             this.IsEnabled = false;
@@ -139,6 +153,8 @@ namespace DBPost.AddEditWindow
             };
             (FindResource("OpenMenu") as Storyboard)!.Begin();
         }
+
+        // Ограничение ввода: только цифры и дефис
         private void Date_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (Regex.IsMatch(e.Text, @"[^0-9-]+"))
@@ -146,11 +162,14 @@ namespace DBPost.AddEditWindow
                 e.Handled = true;
             }
         }
+
+        // Ограничение ввода: только цифры и точка
         private void Digit_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (Regex.IsMatch(e.Text, "[^0-9.]+")) e.Handled = true;
         }
 
+        // Валидация формы перед сохранением
         private bool ValidateSubscription()
         {
             if (FKSubscriber.SelectedIndex < 0)
@@ -194,11 +213,13 @@ namespace DBPost.AddEditWindow
             return true;
         }
 
+        // Вызывается при нажатии на кнопку добавления
         private void AddButton_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (ValidateSubscription()) (sender as Button)!.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
         }
 
+        // Обновление даты окончания и цены при смене срока подписки
         private void SubscriptionTerm_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SubscriptionTerm.SelectedIndex >= 0)
@@ -206,7 +227,7 @@ namespace DBPost.AddEditWindow
                 DateTime start = new();
                 if(DateTime.TryParse(SubscriptionStart.Text, out start))
                 {
-                   SubscriptionEnd.Text = start.AddMonths(int.Parse((SubscriptionTerm.SelectedItem as ComboBoxItem)!.Content.ToString()!)).ToShortDateString();
+                   SubscriptionEnd.Text = start.AddMonths(int.Parse((SubscriptionTerm.SelectedItem as ComboBoxItem)!.Content.ToString()!)).ToString("dd-MM-yyyy");
                 }
                 if (FKPeriodical.SelectedIndex >= 0)
                 {
@@ -235,6 +256,20 @@ namespace DBPost.AddEditWindow
                         Price.Text = findPricePeriodical.ExecuteScalar().ToString()!;
                         con.Close();
                     }
+                }
+            }
+        }
+
+        // Автоматический пересчет даты окончания при изменении даты начала
+        private void SubscriptionStart_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DateTime.TryParse(SubscriptionStart.Text, out DateTime startDate))
+            {
+                if (SubscriptionTerm.SelectedItem is ComboBoxItem selectedItem &&
+                    int.TryParse(selectedItem.Content.ToString(), out int months))
+                {
+                    DateTime endDate = startDate.AddMonths(months);
+                    SubscriptionEnd.Text = endDate.ToString("dd-MM-yyyy");
                 }
             }
         }

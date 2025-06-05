@@ -11,6 +11,7 @@
     <None Remove="img\belpost.png" />
     <None Remove="img\image.png" />
     <None Remove="img\lines.png" />
+    <None Remove="img\mail.png" />
     <None Remove="img\menu.png" />
   </ItemGroup>
 
@@ -30,9 +31,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
     <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="4.11.0" />
     <PackageReference Include="MaterialDesignThemes" Version="4.7.1" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="img\mail.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

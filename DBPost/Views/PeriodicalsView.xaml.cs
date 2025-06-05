@@ -1,43 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Collections;
-using System.Windows.Controls.Primitives;
 using DBPost.AddEditWindow;
 using DBPost.Windows;
 
 namespace DBPost.Views
 {
-    /// <summary>
-    /// Логика взаимодействия для PeriodicalsView.xaml
-    /// </summary>
+    // Класс для отображения и управления представлением "Периодические издания"
     public partial class PeriodicalsView : UserControl
     {
+        // Строка подключения к базе данных, полученная из конфигурационного файла
         string ConString = ConfigurationManager.ConnectionStrings["ConString"].ConnectionString;
         private IEnumerable? periodicals;
         public PeriodicalsView()
         {
             InitializeComponent();
-            FillDataGrid();
+            FillDataGrid(); // Загрузка данных при инициализации компонента
         }
 
+        // Метод для заполнения DataGrid данными из базы данных
         public void FillDataGrid()
         {
-            
             string CmdString = string.Empty;
             using (SqlConnection con = new SqlConnection(ConString)) { 
                 SqlCommand cmd = new SqlCommand("SELECT * From Periodicals", con);
@@ -49,6 +36,7 @@ namespace DBPost.Views
             }
         }
 
+        // Обработка поиска по тексту в поле SearchTextBox
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (SearchTextBox.Text.Length > 0)
@@ -65,31 +53,49 @@ namespace DBPost.Views
             }
         }
 
+        // Удаление выбранного периодического издания
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBoxResult.Yes == MessageWindow.Show("Информационное окно", "Удалить?", MessageBoxButton.YesNo))
             {
+                bool hasSubsc = false; // Флаг наличия подписок
                 string id = ((DataRowView)((Button)sender).Tag).Row["IDPeriodical"].ToString()!;
-                int rowsAffected;
                 using (SqlConnection con = new SqlConnection(ConString))
                 {
-                    SqlCommand cmd = new SqlCommand("Delete from Periodicals where IDPeriodical=" + id, con);
-                    con.Open();
-                    rowsAffected = cmd.ExecuteNonQuery();
-                    con.Close();
+                    SqlCommand cmd = new SqlCommand($"SELECT * From Subscriptions where FKPeriodical = {id}", con);
+                    SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                    DataTable dt = new DataTable("Subscriptions");
+                    sda.Fill(dt);
+                    hasSubsc = dt.DefaultView.Count > 0;
                 }
-                if (rowsAffected > 0)
-                {
-                    MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
-                }
+                
+
+                if (hasSubsc)
+                    MessageWindow.Show("Информационное окно", "Перед удалением периодического издания необходимо удалить все подписки на него.", MessageBoxButton.OK);
                 else
                 {
-                    MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    int rowsAffected;
+                    using (SqlConnection con = new SqlConnection(ConString))
+                    {
+                        SqlCommand cmd = new SqlCommand("Delete from Periodicals where IDPeriodical=" + id, con);
+                        con.Open();
+                        rowsAffected = cmd.ExecuteNonQuery();
+                        con.Close();
+                    }
+                    if (rowsAffected > 0)
+                    {
+                        MessageWindow.Show("Информационное окно", "Успешно удалено", MessageBoxButton.OK);
+                    }
+                    else
+                    {
+                        MessageWindow.Show("Информационное окно", "Произошла ошибка, попробуйте снова", MessageBoxButton.OK);
+                    }
+                    FillDataGrid();
                 }
-                FillDataGrid();
             }
         }
 
+        // Открытие окна редактирования выбранного издания
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -104,6 +110,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(periodicalsWindow);
         }
 
+        // Обработка нажатия кнопки добавления нового издания
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
@@ -116,6 +123,7 @@ namespace DBPost.Views
             baseContainer?.Children.Add(periodocalsC);
         }
 
+        // Метод для повторного включения окна и меню после закрытия дочернего окна
         public void EnableWindow()
         {
             MainWindow mainWindow = ((((this.Parent as ContentControl)!.Parent as Grid)!.Parent as Border)!.Parent as MainWindow)!;
